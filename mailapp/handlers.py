@@ -157,6 +157,52 @@ class WorkHandler(APIHandler):
 
         self.finish(result)
 
+class ProjectsHandler(APIHandler):
+
+    @tornado.web.asynchronous
+    @tornado.gen.engine
+    def get(self):
+        result = utils.init_response_data()
+        try:
+            client = tornado.httpclient.AsyncHTTPClient()
+            response = yield tornado.gen.Task(client.fetch, "http://221.226.241.45:8889/worksheet/projects")
+            response_body = json.loads(response.body)
+            data = response_body.get("data", [])
+            projects = data.get("projects",[])
+            result["data"] = []
+            for project in projects:
+                result["data"].append(dict(
+                    title = project.get("name",""),
+                    id = project.get("id",0),
+                    tasks = project.get("task_list",[]),
+                ))
+        except Exception, e:
+            result = utils.reset_response_data(0, str(e))
+            self.write(result)
+            self.finish()
+            return
+
+        self.finish(result)
+
+class MembersHandler(APIHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.engine
+    def get(self):
+        result = utils.init_response_data()
+        try:
+            client = tornado.httpclient.AsyncHTTPClient()
+            response = yield tornado.gen.Task(client.fetch, "http://221.226.241.45:8889/worksheet/members")
+            response_body = json.loads(response.body)
+            data = response_body.get("data", [])
+            members = data.get("member_list", [])
+            result["data"] = members
+        except Exception, e:
+            result = utils.reset_response_data(0, str(e))
+            self.write(result)
+            self.finish()
+            return
+
+        self.finish(result)
 
 handlers = [
     (r"/api/mail/list", MailListCreateHandler),
@@ -164,4 +210,6 @@ handlers = [
     (r"/api/mailsend", MailSendHandler),
     (r"/api/workmailsend", WorkMailSendHandler),
     (r"/api/work", WorkHandler),
+    (r"/api/projects", ProjectsHandler),
+    (r"/api/members", MembersHandler),
 ]
