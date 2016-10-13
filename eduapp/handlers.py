@@ -18,6 +18,24 @@ class SubjectRetrieveUpdateDestroyHandler(RetrieveUpdateDestroyAPIHandler):
 class UniversityListCreateHandler(ListCreateAPIHandler):
     model = models.UniversityModel()
 
+    def get(self):
+        result = utils.init_response_data()
+        try:
+            keyword = self.get_argument("keyword", "")
+            if keyword != "":
+                self.mg_query_params.update({
+                    "name": {"$regex": keyword}
+                })
+            self.mg_sort_params = {
+                "city": -1,
+            }
+        except Exception, e:
+            result = utils.reset_response_data(0, str(e))
+            self.write(result)
+            self.finish()
+            return
+        ListCreateAPIHandler.get(self)
+
 class UniversityRetrieveUpdateDestroyHandler(RetrieveUpdateDestroyAPIHandler):
     model = models.UniversityModel()
 
