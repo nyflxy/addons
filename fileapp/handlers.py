@@ -15,6 +15,9 @@ import time
 from dxb.handler import APIHandler,ListAPIHandler
 import dxb.libs.utils as utils
 import models
+from pinyin import PinYin
+pinyin_obj = PinYin()
+pinyin_obj.load_word()
 
 options = utils.options
 
@@ -73,9 +76,62 @@ class FileListHandler(ListAPIHandler):
 class FileDownloadListHandler(ListAPIHandler):
     model = models.FileDownloadModel()
 
+class SingleDocumentParseHandler(APIHandler):
+
+    def post(self):
+        result = utils.init_response_data()
+        try:
+            filename = self.get_argument("filename")
+            download_format = self.get_argument("download_format","md")
+            contents = self.request.files['file']
+            for content in contents[0:1]:
+                print content.keys()
+                content_body = content.get("body","")
+                content_body = content_body.replace("${","```js").replace("}$","```")
+                filename_words = pinyin_obj.hanzi2pinyin(string=filename)
+                filename_pinyin = "_".join(filename_words)
+                url = "/tmp/" + filename_pinyin + "." +download_format
+                with open(url, 'wb') as f:
+                        f.write(content_body)
+                paras = content_body.split("#")
+                result["data"].update(dict(
+                    filename=filename,
+                    paras=paras,
+                ))
+        except StandardError,e:
+            result = utils.reset_response_data(0,str(e))
+
+        self.finish(result)
+
+class SingleDocumentDownloadHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        result = utils.init_response_data()
+        try:
+            filename = self.get_argument("filename")
+            download_format = self.get_argument("download_format","md")
+            filename_words = pinyin_obj.hanzi2pinyin(string=filename)
+            filename_pinyin = "_".join(filename_words)
+            url = "/tmp/" + filename_pinyin + "." + download_format
+            self.set_header ('Content-Type', 'application/octet-stream')
+            self.set_header ('Content-Disposition', 'attachment; filename='+filename_pinyin + "." + download_format)
+            with open(url, 'rb') as f:
+                while True:
+                    data = f.read(1024)
+                    if not data:
+                        break
+                    self.write(data)
+        except StandardError,e:
+            result = utils.reset_response_data(0,str(e))
+            self.finish(result)
+
+        self.finish()
+
 handlers = [
             (r'/api/file/upload',FileUploadHandler),
             (r'/api/file/download', FileDownloadHandler),
             (r'/api/file/list', FileListHandler),
             (r'/api/download/list', FileDownloadListHandler),
+            (r'/api/tool/single_document/parse',SingleDocumentParseHandler),
+            (r'/api/tool/single_document/download',SingleDocumentDownloadHandler),
         ]
