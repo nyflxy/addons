@@ -87,7 +87,7 @@ class SingleDocumentParseHandler(APIHandler):
             for content in contents[0:1]:
                 print content.keys()
                 content_body = content.get("body","")
-                content_body = content_body.replace("${","```js").replace("}$","```")
+                content_body = content_body.replace("${","```js").replace("}$","```").replace("<<<","```js").replace(">>>","```")
                 filename_words = pinyin_obj.hanzi2pinyin(string=filename)
                 filename_pinyin = "_".join(filename_words)
                 url = "/tmp/" + filename_pinyin + "." +download_format
