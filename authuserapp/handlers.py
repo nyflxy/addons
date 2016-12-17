@@ -146,7 +146,7 @@ class UserSignIn(APIHandler):
             client = tornado.httpclient.AsyncHTTPClient()
             response = yield tornado.gen.Task(
                 client.fetch,
-                  "http://localhost:8500/token",
+                  "http://localhost:8888/token",
                   method='POST',
                   body=body)
             response_body = json.loads(response.body)
@@ -232,7 +232,6 @@ class WXUserHandler(APIHandler):
         self.post(*args, **kwargs)
 
     def post(self, *args, **kwargs):
-        pdb.set_trace()
         result = utils.init_response_data()
         try:
             user_id = self.get_argument("user_id","")

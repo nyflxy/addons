@@ -141,8 +141,7 @@ class APIDocumentParseHanlder(APIHandler):
                 self.folder_names_flag = True
             else:
                 self.folder_names_flag = False
-            # path = self.get_argument("path", "/tmp/")
-            path = "/home/nyf/develop/python_api_document/"
+            path = self.get_argument("path", "/root/.develop/python_api_document/api/document/")
             for content in contents[0:1]:
                 # ['body', 'content_type', 'filename']
                 body = content.get("body","{}")
@@ -157,7 +156,7 @@ class APIDocumentParseHanlder(APIHandler):
                     for request in requests:
                         id = request.get("id")
                         requests_dict[id] = dict(
-                            url = request.get("url",""),
+                            url = "", #request.get("url",""),
                             method = request.get("method",""),
                             name = request.get("name",""),
                             description = request.get("description",""),
@@ -205,10 +204,7 @@ class APIDocumentParseHanlder(APIHandler):
         folders_name_words = pinyin_obj.hanzi2pinyin(string=folders_name)
         folders_name_pinyin = "_".join(folders_name_words)
         path = folders_path + folders_name_pinyin
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-            os.mkdir(path)
-        else:
+        if not os.path.isdir(path):
             os.mkdir(path)
         path_file = path + "/" + folders_name_pinyin + ".md"
         self.summary += "* [%s](%s/%s.md)\n"%(folders_name, folders_name_pinyin, folders_name_pinyin)
